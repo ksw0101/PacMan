@@ -1,0 +1,19 @@
+쿼터니언과 오일러각
+
+오일러각의 2차원 회전공식은 다음과 같다
+x' = xcos -ysin
+y' = xsin +ycos
+
+쿼터니언의 도입은
+최소단위 회전 공식 cos(t) + sin(t)i
+복소 평면상의 한점 p는 x + yi로 나타낼수있다.
+최소 단위 공식과 복소 평면 회전 공식을 곱하면
+xcos(t) + xsin(t)i + ycos(t)i - ysin(t)
+xcos(t) - ysin(t)
+{xsin(t) + ycos(t)}i 로 나타낼 수있으므로
+오일러각의 회전공식과 같은 꼴로 표현 가능하다.
+
+쿼터니언을 공식을 대입하여 최종행렬을 구하면
+_44성분이 1이 아닌 값이 나온다
+
+https://reminder-by-kwan.tistory.com/139 참조

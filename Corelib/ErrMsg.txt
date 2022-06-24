@@ -1,0 +1,80 @@
+D3D_OK
+에러는 발생하고 있지 않다.
+
+D3DOK_NOAUTOGEN
+이것은 성공 코드이다. 다만, 이 포맷에 대한 밉맵의 자동 생성은 지원하지 않는다. 이것은, 리소스 생성은 성공하지만, 밉맵 레벨은 자동 생성되지 않는 것을 의미한다.
+
+D3DERR_CONFLICTINGRENDERSTATE
+현재 설정되어 있는 렌더링 스테이트는 동시에는 사용할 수 없다.
+
+D3DERR_CONFLICTINGTEXTUREFILTER
+현재의 텍스처 필터는 동시에는 사용할 수 없다.
+
+D3DERR_CONFLICTINGTEXTUREPALETTE
+현재의 텍스처는 동시에는 사용할 수 없다.
+
+D3DERR_DEVICELOST
+장치는, 손실하고 있지만, 현재 리셋 할 수 없다. 따라서, 렌더링은 불가능하다.
+
+D3DERR_DEVICENOTRESET
+장치는, 손실하고 있지만, 현재 리셋 할 수 있다.
+
+D3DERR_DRIVERINTERNALERROR
+내부 드라이버 에러. 이 에러를 받았을 경우, 애플리케이션은 일반적으로 셧다운 해야 한다. 더 자세한 정보는, 「드라이버의 내부 에러」를 참조할것.
+
+D3DERR_INVALIDCALL
+메서드의 호출이 무효이다. 예를 들어, 메서드의 파라미터가 유효한 포인터는 아니다.
+
+D3DERR_INVALIDDEVICE
+요구된 장치의 종류가 무효이다.
+
+D3DERR_MOREDATA
+지정된 버퍼 사이즈 로 유지할 수 있는 이상의 데이터가 존재한다.
+
+D3DERR_NOTAVAILABLE
+이 장치는, 조회된 테크닉을 지원 하고 있지 않다.
+
+D3DERR_NOTFOUND
+요구된 항목이 발견되지 않았다.
+
+D3DERR_OUTOFVIDEOMEMORY
+Direct3D 가 처리를 실시하는데 충분한 디스플레이 메모리가 없다.
+
+D3DERR_TOOMANYOPERATIONS
+장치가 지원 하고 있는 수보다 많은 텍스처 필터링 처리를, 애플리케이션이 요구하고 있다.
+
+D3DERR_UNSUPPORTEDALPHAARG
+알파 채널에 대해서 지정되고 있는 텍스처 혼합 인수를, 장치가 지원 하고 있지 않다.
+
+D3DERR_UNSUPPORTEDALPHAOPERATION
+알파 채널에 대해서 지정되고 있는 텍스처 혼합 처리를, 장치가 지원 하고 있지 않다.
+
+D3DERR_UNSUPPORTEDCOLORARG
+색값에 대해서 지정되고 있는 텍스처 혼합 인수를, 장치가 지원 하고 있지 않다.
+
+D3DERR_UNSUPPORTEDCOLOROPERATION
+색값에 대해서 지정되고 있는 텍스처 혼합 처리를, 장치가 지원 하고 있지 않다.
+
+D3DERR_UNSUPPORTEDFACTORVALUE
+장치가 지정된 텍스처 계수값을 지원 하고 있지 않다.
+
+D3DERR_UNSUPPORTEDTEXTUREFILTER
+장치가 지정된 텍스처 필터를 지원 하고 있지 않다.
+
+D3DERR_WRONGTEXTUREFORMAT
+텍스처 표면의 픽셀 포맷이 무효이다.
+
+E_FAIL
+Direct3D 서브 시스템내에서 원인 불명의 에러가 발생했다.
+
+E_INVALIDARG
+무효인 파라미터가 함수에 건네졌다.
+
+E_INVALIDCALL
+메서드의 호출이 무효이다. 예를 들어, 메서드의 파라미터에 무효인 값이 설정되어 있는 경우 등이다.
+
+E_OUTOFMEMORY
+Direct3D 가 호출을 완료하기 위한 충분한 메모리를 할당할 수가 없었다.
+
+S_OK
+에러는 발생하고 있지 않다.

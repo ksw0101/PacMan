@@ -1,0 +1,197 @@
+@Init 부분
+
+Device가 DC SC를 만들고
+SC에서 백버퍼를 받아오고 Device에서 ResourceView를 create()한다.
+ResourceView에서 위의 백버퍼를 파이프라인에 바인딩. RTV는 OM에의해 설정
+RS에서 ViewPort를 설정
+파이프 라인이란건 순서대로 설정이 아니라 설정만 제대로 해놓으면
+알아서 불러 올지도?
+
+카메라 뷰행렬 작성(위가 z축인지 y축인지 설정하는 과정 필요)
+카메라 초기위치 설정 
+>>> 행렬을 만든 것이 아님. 
+>>> 초기위치와 회전을 설정한 것뿐.
+
+모델 초기화
+버퍼디스크립션(내가 만든 버텍스 버퍼 클래스를 넣어줌) + 서브리소스데이터를 이용하여
+CreateBuffer를 해서 버퍼 생성
+
+	텍스쳐 클래스
+	이미지의 로드 
+	1. 이미지를 ID3D11Resource* 형태로 저장. : 툴킷이용. ID3D11Texture의 부모클래스
+	2. 이미지를 ID3D11Texture* 형태로 저장. : CreateTexture2D(); 빈 택스쳐를 만든다.
+	UpdateSubResource(); 위에서 만든 빈텍스쳐에 메모리(이미지)를 삽입한다.
+	-> 결과적으로 파이프라인에 전달하기 위해선 : ShaderResoureView* 형태로 이미지가 변환되어야한다.
+	CraeteShaderResourceView();
+	GenerateMips();
+
+	TK이용시 CreateTexture2D(), UpdatesubResource(), CreateShaderResourceView(), GenerateMips();
+	이 4가지 과정이 필요없다
+	CraeteWICTextureFromFile() 함수 하나로 ID3D11Resource*, ShaderResourceView*두가지 모두 반환받는다.
+	단, ID3D11Texture형태의 자료이지만 주소반환은 ID3D11Resourece의 포인터가 반환된다.
+컬러 쉐이더
+D3DCompileFromFile(): 버텍스/픽셀쉐이더 코드를 컴파일, 컴파일한 쉐이더는 Blob에 담아둔다.
+CreateVertexShader(): 버퍼로 셰이더 생성 
+D3D11_INPUT_ELEMENT_DEXC: 정점 입력 레이아웃 시멘틱 작성
+CreateInputLayout(): Blob과, 레이아웃 데스크립션을 이용하여 레이아웃생성
+CreateBuffer() : 정점 셰이더의 상수 행렬을 제작할 수 있다.
+CreateSamplerState();
+CreateBlendSate(); // 알파 블랜딩을 위해 만든다.
+
+
+@Render 부분
+DC->ClearResourceView();
+
+카메라의 뷰행렬을 설정
+
+모델 (IASet 버텍스버퍼, 인덱스 버퍼, IASet프리미티브 토폴로지)
+Strides, Offset은 버텍스버퍼를 여러개 쓸 때 사용한다.
+IASetVertexBuffers; // 버텍스 버퍼를 넘겨준다
+IASetIndexBuffers;
+IASetPrimitiveTopology;
+
+SetShaderparameters
+{
+	D3D11_MAPPED_SUBRESOURCE ms;
+	dc->Map(상수버퍼, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
+	MatrixBufferType* mbt = (MatrixBufferType*)ms.pData;
+	mbt->world = 월드 행렬;
+	mbt->view = 뷰행렬
+	mbt->projection = 투영행렬;
+	dc->Unmap(상수버퍼)
+	dc->VSSetConstantBuffers(상수버퍼);
+	// 이때 0은 hlsl에서 0번 레스트터 시맨틱에서 0번임을 뜻한다.
+	// 만약 3번 레지스트리로 등록해놨다면 3을 입력해야한다.
+	// register(t0);
+	deviceContext->PSSetShaderResources(0, 1, &texture(셰이더 리소스 뷰*));
+	dc->OMSetBlendSate(&BlendState, 0, 1)
+}
+
+IASetInputLayout; // 버텍스 버퍼에 있는 정보를 버텍스 셰이더에 넘겨준다.
+VSSetShader; // 어떤 버텍스 셰이더를 사용할 지
+PSSetShader;
+
+
+
+DrawIndexed를 실행하기 전까지 위의 순서는 아무래도 좋다.
+
+// HLSL 부분
+1. 인풋 레이아웃에서 시맨틱 이름은 마음대로 정할 수 있다.
+심지어 "asdfasdf"이런 이름도 전혀 상관 없다.
+인풋레이아웃과 셰이더의 이름만 통일해 준다면 된다.
+
+2. 인풋레이아웃에선 내가 넘겨줄 애들을 선택할 수 있다.
+SV_ 는 내가 따로 설정을 안해 줘도 되지만. DX에서 HLSL을 호출할때 넣어주는 매개변수에선
+반드시 내가 인풋레이아웃에 넣은 셰이더들을 호출하므로 VS에서 처음 호출할때는
+SV_POSITION을 사용할수 없다.
+-> SV_POSITION을 대체할 POSITION이나 적당히 이름을 정해 넣자.
+
+3. 인풋 레이아웃에서 끝에 숫자를 안 붙히더라도 HLSL에선 끝에 숫자를 넣을수 있다.
+이는 인덱스 번호이며 딱히 인덱스 번호 제한은 없다.
+
+4. D3D11_INPUT_ELEMENT_DESC.AlignedByteOffset
+	이전 시맨틱으로부터의 시작점으로 부터의 오프셋을 나타내며
+	바이트 크기는 반드시 정해진 양식을 따라야한다.
+	D3D11_APPEND_ALIGNED_ELEMENT를 사용하면 자동으로 맞춰준다.
+
+5. 한번에 여러장을 그리고 싶은 경우 레지스터를 분리해서 이미지를 저장해보자.
+  PSSetShaderResource(인덱스 번호, 1,)
+  텍스쳐는 hlsl의 Texture2D에 저장되고 각각의 (t0~n)까지의 레지스터에 저장ㄷ가능
+  SamplerState는 여러번 재활용 가능하다.
+
+
+
+Device 
+장치를 Create()한다.
+
+DeviceContext 
+후면 버퍼에 대한 제어, 모든 파이프라인 단계의 함수에 관여함
+
+SwapChain
+1. 백버퍼에 대한 정보.
+2. 화면 새로고침 빈도 저장.
+4. 화면 크기 조절에대한 멀티 샘플링 지원
+
+1. GetBuffer() : 스왑체인이 가진 후면 버퍼 중 하나에 대한 포인터 반환
+2. GetContainingOutput() : 출력 윈도우의 대부분 클라이언트 영역을 포함하는 디스플레이를 반환
+3. GetDesc() : 스왑 체인의 정보를 반환
+4. GetFrameStatistics() : 마지막 렌더 프레임에 대한 성능 통계자료반환
+5. GetLastPresentCount() : Present() 함수가 호출된 횟수.
+6. Present() : 백버퍼를 출력.
+7. ResizeBuffers() : 스왑체인의 후면 버퍼크기, 형식, 개수를 변경.
+	윈도우의 크기가 변경 된 경우 반드시 호출해야한다.
+8. ResizeTarget() : 출력 타깃의 크기를 변경. 윈도우 모드일 경우 윈도우의 크기 변경.
+	전체 화면 모드일 경우 디스플레이 모드를 변경
+9. SetFullscreenState() : 전체화면 또는 디스플레이 모드를 설정
+
+입력 조립 Input Asembly
+ID3d11DeviceContext::IASetVertexBuffers()
+ID3d11DeviceContext::IASetIndexBuffer()
+ID3d11DeviceContext::IASetPrivitiveTopology()
+ID3d11DeviceContext::IASetInputLayout()
+ID3d11DeviceContext::IAGetVertexBuffers()
+ID3d11DeviceContext::IAGetIndexBuffer()
+ID3d11DeviceContext::IAGetPrivitiveTopology()
+ID3d11DeviceContext::IAGetInputLayout()
+
+ID3d11DeviceContext::VSSetShader()
+ID3d11DeviceContext::VSSetShaderResource()
+ID3d11DeviceContext::VSSetConstantBuffers()
+ID3d11DeviceContext::VSSetSamplers()			// 샘플러 생성시에 바로
+ID3d11DeviceContext::VSGetShader()
+ID3d11DeviceContext::VSGetShaderResource()
+ID3d11DeviceContext::VSGetConstantBuffers()
+ID3d11DeviceContext::VSGetSamplers()
+
+ID3d11DeviceContext::SOSetTarget()
+ID3d11DeviceContext::SOGetTarget()
+
+ID3d11DeviceContext::RSSetState()
+ID3d11DeviceContext::RSSetViewport()
+ID3d11DeviceContext::RSSetScissorRects()
+ID3d11DeviceContext::RSGetState()
+ID3d11DeviceContext::RSGetViewport()
+ID3d11DeviceContext::RSGetScissorRects()
+
+ID3d11DeviceContext::OMSetRenderTargets()		// 랜타뷰 생성시에 바로
+ID3d11DeviceContext::OMSetBendState()
+ID3d11DeviceContext::OMSetDepthStencilState()
+ID3d11DeviceContext::OMGetRenderTargets()
+ID3d11DeviceContext::OMGetBendState()
+ID3d11DeviceContext::OMGetDepthStencilState()
+
+
+@블랜드스테이트
+D3D11_BLEND_DESC.D3D11_RENDER_TARGER_BLEND_DESC
+    BOOL BlendEnable; // 블렌드 데스크립션의 첫번째 맴버.
+//RGB연산 저장
+  // 원본 소스 텍스쳐
+    D3D11_BLEND SrcBlend	= D3D11_BLEND_SRC_ALPHA; // (소스 알파값)
+  // 배경 이미지
+    D3D11_BLEND DestBlend	= D3D11_BLEND_INV_SRC_ALPHA; //( 1- 소스 알파값)
+  // 연산 방식
+    D3D11_BLEND_OP BlendOp = D3D11_BLEND_OP_ADD;		//아래에서 더하기 명령어
+//소스컬러 * D3D11_BLEND_SRC_ALPHA(소스의 알파) + 대상컬러 * D3D11_BLEND_INV_SRC_ALPHA(1-소스의 알파) 라는 뜻이다.
+최종 색 = 소스컬러 * 소스알파 + 배경컬러 * (1-소스알파)
+  case 소스알파 = 0:
+    최종색 = 배경 컬러
+  case 소스알파 = 1:
+    최종색 = 소스 컬러
+  따라서 1일때 불투명 0일때 투명하다
+  + 연산이 들어간 이유는 소스의 색이 안보이는 만큼 뒷 배경이 보여야 하므로 색을 혼합해주기 위해 +한다.
+// 알파연산 저장
+  // 소스의 알파값을 저장한다. 이것이 없으면 알파블랜딩이 되지 않는다.
+    D3D11_BLEND SrcBlendAlpha = D3D11_BLEND_ONE; 
+    D3D11_BLEND DestBlendAlpha = D3D11_BLEND_ZERO;
+    D3D11_BLEND_OP BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    UINT8 RenderTargetWriteMask = D3D11_COLOR_WRITE_ENALBE_ALL;
+
+@_DESC, //SUBRESOURCE_DATA도 마찬가지
+DirectX에서 DESC 형태의 구조체는 COM방식의 참조 카운터로 작동하는 방식이 아니다.
+-> Release필요 없음.
+-> 정보를 버퍼생성자에 전달하고서 역할이 끝남
+-> 동기화X
+스택의 끝에서 메모리가 해제된다.
+즉, 여러개의 버퍼를 만들때 일일이 버퍼하나하나마다 DESC를 새로 만들 필요가 없다.
+
+

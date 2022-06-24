@@ -1,0 +1,7 @@
+텍스쳐 설정
+// 이미지의 uv시작 좌표 / 이미지 전체크기를 나누어 준다.
+u = 이미지 선택부분의 x좌표 / Texture2D->getDesc().Width; 
+v = 이미지 선택부분의 y좌표 / Texture2D->getDesc().Height;
+
+m_rtSource : 선생님의 라이브러리에선 선택한 이미지의 uv 정보
+
